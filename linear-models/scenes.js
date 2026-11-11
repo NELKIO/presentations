@@ -146,6 +146,34 @@
     legend(root, [{ color: C.gray, label: `train · ${sm.train[0].length}`, dot: 1 }, { color: C.orange, label: `validation · ${sm.val[0].length}`, dot: 1 }, { color: C.blue, label: 'прямая, обученная на train' }]);
   };
 
+  // ---------- корреляция: облако точек при заданном r ----------
+  S.corr = root => {
+    const cr = D.corr, xs = cr.x, es = cr.e, bar = controls(root), n = note(root);
+    const P = plot(root, { w: +root.dataset.w || 600, h: +root.dataset.h || 400, x: [-3, 3], y: [-3.2, 3.2], xl: 'x', yl: 'y', xn: 6, yn: 6 });
+    const corr = (a, b) => {
+      const ma = mean(a), mb = mean(b);
+      let s = 0, sa = 0, sb = 0;
+      a.forEach((v, i) => { s += (v - ma) * (b[i] - mb); sa += (v - ma) ** 2; sb += (b[i] - mb) ** 2; });
+      return s / Math.sqrt(sa * sb);
+    };
+    let mode = 'line', rr = 0.6;
+    function draw() {
+      P.clear();
+      const ys = mode === 'line' ? xs.map((x, i) => rr * x + Math.sqrt(1 - rr * rr) * es[i])
+                                 : xs.map((x, i) => 0.75 * (x * x - 1) + 0.25 * es[i]);
+      const r = corr(xs, ys), my = mean(ys), k = mean(xs.map((x, i) => x * (ys[i] - my)));  // x уже центрирован, дисперсия 1
+      P.dots(xs, ys, { fill: C.blue, opacity: .55 });
+      P.line([-3, 3], [my - 3 * k, my + 3 * k], { stroke: C.orange, 'stroke-width': 3 });
+      const msg = mode === 'parab' ? 'y задаётся x почти точно, но связь не линейная'
+        : Math.abs(r) > 0.999 ? 'все точки на одной прямой' : Math.abs(r) > 0.9 ? 'точки почти на прямой' : Math.abs(r) < 0.05 ? 'линейной связи нет' : r > 0 ? 'больше x — в среднем больше y' : 'больше x — в среднем меньше y';
+      n.innerHTML = `r = <b>${fmt(Math.abs(r) < 0.005 ? 0 : r, 2)}</b> — ${msg}`;
+    }
+    slider(bar, { label: 'Корреляция r', min: -1, max: 1, step: 0.05, value: rr, on: v => { rr = v; if (mode !== 'line') sg.set(mode = 'line'); draw(); } });
+    const sg = seg(bar, '', [{ label: 'облако', value: 'line' }, { label: 'парабола', value: 'parab' }], mode, v => { mode = v; draw(); });
+    legend(bar, [{ color: C.orange, label: 'прямая МНК' }]);
+    draw();
+  };
+
   S.residuals = root => {
     const P = mpgPlot(root, { w: +root.dataset.w || 700, h: 440, x: [1.5, 4.7], y: [8, 40] });
     P.line([1.5, 4.7], [lineY(1.5), lineY(4.7)]);
