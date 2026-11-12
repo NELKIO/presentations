@@ -573,6 +573,107 @@
     caption(root, 'Учебная синтетика: два нормальных облака по 120 точек, seed = 1. Цвет фона — предсказанная вероятность класса 1; обе модели обучены на показанных точках.');
   };
 
+
+  // ---------- multinomial logistic regression: shared softmax normalization ----------
+  S.multiclass = root => {
+    const input = h('div', { class: 'multiclass-input' }, root);
+    const digit = h('div', { class: 'multiclass-digit' }, input);
+    const example = D.digits.examples.find(e => e.y === 1);
+    digitSvg(digit, example.img, v => { const g = Math.round(255 - v / 16 * 235); return `rgb(${g},${g},${g})`; });
+    h('p', { html: 'Одно изображение <b>x</b><br><span class="muted">64 пикселя → три score</span>' }, input);
+    const bar = controls(root);
+    const svg = h('svg', { viewBox: '0 0 650 250', role: 'img', 'aria-label': 'Score и вероятности трёх классов после softmax' }, root);
+    const summary = note(root);
+    const labels = ['3', '5', '8'], colors = [C.blue, C.green, C.orange];
+    const sx = z => 180 + z * 20;
+    function draw(z8) {
+      const scores = [1, 0.5, z8], max = Math.max(...scores);
+      const exp = scores.map(z => Math.exp(z - max)), total = exp.reduce((a, b) => a + b, 0);
+      const probabilities = exp.map(v => v / total);
+      const winner = probabilities.indexOf(Math.max(...probabilities));
+      svg.replaceChildren();
+      h('text', { x: 140, y: 26, fill: C.muted, 'font-size': 20 }, svg, 'Score z');
+      h('text', { x: 390, y: 26, fill: C.muted, 'font-size': 20 }, svg, 'Вероятность p');
+      h('line', { x1: sx(0), x2: sx(0), y1: 45, y2: 218, stroke: C.line, 'stroke-width': 2 }, svg);
+      scores.forEach((z, i) => {
+        const y = 54 + i * 62, p = probabilities[i];
+        h('text', { x: 8, y: y + 22, fill: colors[i], 'font-size': 26, 'font-weight': 600 }, svg, `«${labels[i]}»`);
+        h('rect', { x: Math.min(sx(0), sx(z)), y, width: Math.abs(z) * 20, height: 30, rx: 3, fill: colors[i] }, svg);
+        h('text', { x: 305, y: y + 23, fill: C.ink, 'font-size': 23, 'text-anchor': 'end' }, svg, fmt(z, 1));
+        h('text', { x: 335, y: y + 22, fill: C.muted, 'font-size': 24 }, svg, '→');
+        h('rect', { x: 390, y, width: 175, height: 30, rx: 3, fill: C.panel }, svg);
+        h('rect', { x: 390, y, width: 175 * p, height: 30, rx: 3, fill: colors[i] }, svg);
+        h('text', { x: 640, y: y + 23, fill: colors[i], 'font-size': 24, 'text-anchor': 'end', 'font-weight': i === winner ? 600 : 400 }, svg, `${fmt(p * 100, 1)}%`);
+      });
+      h('text', { x: sx(0), y: 240, fill: C.muted, 'font-size': 18, 'text-anchor': 'middle' }, svg, '0');
+      h('text', { x: 390, y: 240, fill: C.muted, 'font-size': 20 }, svg, 'Сумма = 100%');
+      summary.innerHTML = `Решение: <b>цифра ${labels[winner]}</b> · максимальная вероятность ${fmt(probabilities[winner] * 100, 1)}%`;
+      root.dataset.probabilities = JSON.stringify(probabilities);
+      root.dataset.winner = labels[winner];
+    }
+    slider(bar, { label: 'Score «8»', min: -3, max: 4, step: 0.1, value: 2, on: draw });
+    draw(2);
+    caption(root, 'Score условные: показываем работу softmax, а не качество обученной модели.');
+  };
+
+
+  // ---------- binary targets: unconstrained OLS vs separately fitted logistic regression ----------
+  S.linearprob = root => {
+    const xs = [-2.4, -1.8, -1.4, -1, -0.6, -0.2, 0.2, 0.6, 1, 1.4, 1.8, 2.4];
+    const ys = [0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1];
+    // sklearn fits on these exact points: LinearRegression and LogisticRegression(C=1).
+    const linear = x => 0.2346278317152104 * x + 0.5;
+    const logistic = x => sigmoid(1.00179551 * x);
+    const bar = controls(root), box = panels(root), grid = range(-4, 4, 160);
+    const configs = [
+      { title: 'Линейная регрессия · МНК', fn: linear, color: C.blue },
+      { title: 'Логистическая регрессия · log loss', fn: logistic, color: C.green },
+    ];
+    configs.forEach(c => {
+      c.P = plot(box, { w: 608, h: 270, x: [-4, 4], y: [-0.55, 1.55], xl: 'Признак x', title: c.title,
+        yt: [0, 1].map(v => ({ v, label: String(v) })), xt: [-4, -2, 0, 2, 4].map(v => ({ v, label: String(v) })) });
+      c.P.rect(-4, 0, 4, 1, { fill: 'rgba(33,125,104,.055)' });
+      c.P.rect(-4, -0.55, 4, 0, { fill: 'rgba(213,103,61,.09)' });
+      c.P.rect(-4, 1, 4, 1.55, { fill: 'rgba(213,103,61,.09)' });
+      [0, 1].forEach(y => c.P.seg(-4, y, 4, y, { 'stroke-dasharray': '4 4', stroke: C.gray, layer: c.P.back }));
+      c.P.line(grid, grid.map(c.fn), { stroke: c.color, 'stroke-width': 3, layer: c.P.back });
+      c.P.dots(xs, ys, { fill: C.ink, r: 5, opacity: .85, layer: c.P.back });
+    });
+    const summary = note(root);
+    function draw(x) {
+      configs.forEach(c => { c.P.clear(); c.P.mark(x, c.fn(x), { fill: c.color }); });
+      const value = linear(x), p = logistic(x);
+      summary.innerHTML = `Новый объект x = <b>${fmt(x, 1)}</b> · МНК: <b style="color:${value < 0 || value > 1 ? C.orange : C.blue}">${fmt(value)}</b> · логрег: <b style="color:${C.green}">${fmt(p)}</b>`;
+      root.dataset.linearPrediction = value;
+      root.dataset.logisticProbability = p;
+    }
+    slider(bar, { label: 'Новый объект x', min: -4, max: 4, step: 0.1, value: 3.5, on: draw });
+    draw(3.5);
+    caption(root, 'Чёрные точки — одинаковые метки 0/1. Оранжевый фон — значения вне [0, 1]. Учебная синтетика, обе модели обучены на этих 12 точках.');
+  };
+
+
+  // ---------- why scaling a separating score decreases unregularized log loss ----------
+  S.weightgrowth = root => {
+    legend(root, [{ color: C.blue, label: 'w = 1, b = 0' }, { color: C.orange, label: 'w = 5, b = 0' }]);
+    const P = plot(root, { w: 570, h: 285, x: [-2.5, 2.5], y: [-0.07, 1.09],
+      xl: 'Признак x', yl: 'Вероятность класса 1',
+      yt: [0, 0.5, 1].map(v => ({ v, label: fmt(v, 1) })),
+      xt: [-2, -1, 0, 1, 2].map(v => ({ v, label: String(v) })) });
+    const grid = range(-2.5, 2.5, 160);
+    P.seg(0, 0, 0, 1, { stroke: C.gray, 'stroke-dasharray': '5 4' });
+    P.text(0, 0.48, 'граница x = 0', { dx: -9, dy: 18, 'text-anchor': 'end', fill: C.muted });
+    P.line(grid, grid.map(sigmoid), { stroke: C.blue, 'stroke-width': 3 });
+    P.line(grid, grid.map(x => sigmoid(5 * x)), { stroke: C.orange, 'stroke-width': 3 });
+    const xs = [-2, -1, -0.5, 0.5, 1, 2];
+    P.dots(xs, xs.map(x => x > 0 ? 1 : 0), { fill: C.ink, r: 5, opacity: 1 });
+    P.seg(1, sigmoid(1), 1, sigmoid(5), { stroke: C.ink, 'stroke-dasharray': '3 3', 'stroke-width': 2 });
+    P.mark(1, sigmoid(1), { fill: C.blue, r: 6 });
+    P.mark(1, sigmoid(5), { fill: C.orange, r: 6 });
+    note(root).innerHTML = 'Объект x = 1, y = 1:<br>p: <b class="blue">0,731</b> → <b class="orange">0,993</b> · loss: <b class="blue">0,313</b> → <b class="orange">0,0067</b>';
+    caption(root, 'Слева — учебная синтетика; чёрные точки — метки train.');
+  };
+
   document.querySelectorAll('[data-scene]').forEach(el => {
     try { S[el.dataset.scene](el); } catch (e) { console.error('scene', el.dataset.scene, e); el.textContent = 'Ошибка сцены: ' + e.message; }
   });

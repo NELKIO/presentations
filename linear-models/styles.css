@@ -212,3 +212,40 @@ html.print-pdf .quiz .quiz-options button.right::before{background:var(--green);
 .reveal .vs .panel p{font-size:21px;margin:6px 0}
 .reveal .vs .panel .equation{font-size:22px;margin:6px 0;padding:10px 12px}
 .reveal .eq-steps .equation{margin:6px 0;padding:10px 16px}
+
+
+/* Multiclass logistic regression: one object, K scores, normalized probabilities. */
+.reveal #multiclass .multiclass-layout{grid-template-columns:1.12fr 1fr;gap:38px}
+.reveal #multiclass .lead{margin-bottom:12px}
+.reveal #multiclass .equation{padding:13px 16px;margin:10px 0;font-size:27px}
+.reveal #multiclass .multiclass-layout p{margin:10px 0;font-size:25px}
+.reveal #multiclass .scene-note{font-size:20px}
+.reveal #multiclass .scene-caption{font-size:16px}
+.reveal #multiclass .bridge-rule{margin-top:18px;font-size:24px}
+.reveal #multiclass .multiclass-input{display:flex;align-items:center;gap:20px;margin:2px 0 16px}
+.reveal #multiclass .multiclass-digit{width:64px;flex-shrink:0}
+.reveal #multiclass .multiclass-input p{font-size:22px}
+.reveal #multiclass .scene-controls{font-size:20px;margin-bottom:12px}
+.reveal #multiclass .scene-controls input{width:210px}
+
+.reveal #multiclass .multiclass-layout .scene-note{font-size:20px;margin:8px 0}
+.reveal #multiclass .multiclass-layout .scene-caption{font-size:16px;line-height:1.3;margin:7px 0 0}
+
+/* Why an OLS prediction on binary labels is not automatically a probability. */
+.reveal #linear-probability .lead{margin-bottom:12px}
+.reveal #linear-probability .probability-explanation{gap:32px;margin-top:12px}
+.reveal #linear-probability .equation{padding:12px 18px;margin:8px 0;font-size:28px}
+.reveal #linear-probability .probability-explanation p{font-size:24px;line-height:1.35;margin:10px 0}
+.reveal #linear-probability .scene-note{font-size:21px;margin:8px 0}
+.reveal #linear-probability .scene-caption{font-size:16px;line-height:1.3;margin:7px 0}
+.reveal #linear-probability .scene-controls{font-size:20px}
+
+/* Separating logistic score: same boundary, greater confidence, lower train loss. */
+.reveal #separable .lead{margin-bottom:14px}
+.reveal #separable .weight-growth-layout{grid-template-columns:1fr 1.12fr;gap:32px}
+.reveal #separable table{margin:0 0 10px;font-size:21px}
+.reveal #separable table td,.reveal #separable table th{padding:10px 9px}
+.reveal #separable .small{font-size:21px;line-height:1.35;margin:10px 0}
+.reveal #separable .scene-note{font-size:21px;margin:8px 0}
+.reveal #separable .scene-caption{font-size:15px;line-height:1.3;margin-top:7px}
+.reveal #separable .bridge-rule{font-size:23px;line-height:1.35;margin-top:12px}
