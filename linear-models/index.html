@@ -610,7 +610,7 @@ model.predict(X_val)</code></pre>
 <tr><th>Класс</th><th>Параметр</th><th>Больше значение —</th></tr>
 <tr><td><code>Ridge</code></td><td><code>alpha</code></td><td>сильнее штраф</td></tr>
 <tr><td><code>Lasso</code></td><td><code>alpha</code></td><td>сильнее штраф</td></tr>
-<tr><td><code>LogisticRegression</code></td><td><code>C</code></td><td class="no">слабее штраф</td></tr>
+<tr><td><code>LogisticRegression</code></td><td><code>C = 1/alpha</code></td><td class="no">слабее штраф</td></tr>
 </tbody>
 </table>
 <p class="small">Классы по-разному нормируют ошибку, поэтому подходящий alpha у Ridge и у Lasso разный — подбираем для каждого.</p>
@@ -814,8 +814,7 @@ b -= eta * (p - y).mean()</code></pre>
 <div class="two wide-right" style="grid-template-columns:1fr 1.25fr;gap:34px">
 <div>
 <p>Поэтому в <code>LogisticRegression</code> L2-штраф, как в Ridge, включён по умолчанию.</p>
-<p>Его силу задаёт параметр <code>C</code> — <b>обратная</b> сила штрафа:</p>
-<p class="bridge-rule" style="margin:8px 0">больше <code>C</code> — слабее штраф, веса больше.<br>меньше <code>C</code> — сильнее штраф, веса меньше.</p>
+<p class="bridge-rule" style="margin:8px 0"><code>C = 1 / alpha</code>: больше C — слабее штраф.</p>
 <p class="small">По умолчанию <code>C = 1</code>. Подбираем по validation, как alpha у Ridge.</p>
 </div>
 <div>
@@ -833,6 +832,7 @@ b -= eta * (p - y).mean()</code></pre>
 <p class="small">Цифры 3 и 8. С ростом C веса растут, ошибка на train падает до нуля, а на validation лучшая — при C = 10.</p>
 </div>
 </div>
+<aside class="notes">Если спросят точнее: sklearn минимизирует сумму log loss по объектам + (1 / 2C)·Σw². С точностью до множителя и суммы вместо среднего это и есть alpha = 1/C.</aside>
 </section>
 
 <section id="three-metrics" class="slide level2">
@@ -887,7 +887,7 @@ b -= eta * (p - y).mean()</code></pre>
 <button type="button">Изменится порог классификации</button>
 <button type="button">Ничего: C влияет только на скорость обучения</button>
 </div>
-<p class="quiz-why">C — обратная сила регуляризации. Большое C разрешает большие веса. Качество на validation при этом может как вырасти, так и упасть — проверяем.</p>
+<p class="quiz-why">C = 1/alpha. Большое C разрешает большие веса. Качество на validation при этом может как вырасти, так и упасть — проверяем.</p>
 </div>
 </section>
 
